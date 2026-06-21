@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(npx tsc --noEmit 2>&1)",
+      "PowerShell(npx prisma generate 2>&1)",
+      "PowerShell(npx tsx prisma/set-bedsitter.ts 2>&1)"
+    ]
+  }
+}

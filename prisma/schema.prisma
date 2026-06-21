@@ -1,0 +1,100 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  email     String    @unique
+  password  String
+  avatar    String?
+  isHost    Boolean   @default(false)
+  createdAt DateTime  @default(now()) @map("created_at")
+  listings  Listing[]
+  bookings  Booking[]
+  reviews   Review[]
+  sessions  Session[]
+
+  @@map("users")
+}
+
+model Listing {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String
+  location    String
+  city        String
+  country     String
+  price       Float
+  images      String[]
+  bedrooms    Int
+  bathrooms   Int
+  maxGuests   Int
+  amenities   String[]
+  category    String    @default("apartment")
+  hostId      String    @db.ObjectId
+  host        User      @relation(fields: [hostId], references: [id])
+  bookings    Booking[]
+  reviews     Review[]
+  rating      Float     @default(0)
+  reviewCount Int       @default(0)
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  @@map("listings")
+}
+
+model Booking {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  listingId  String   @db.ObjectId
+  listing    Listing  @relation(fields: [listingId], references: [id])
+  userId     String   @db.ObjectId
+  user       User     @relation(fields: [userId], references: [id])
+  checkIn    DateTime
+  checkOut   DateTime
+  guests     Int
+  totalPrice Float
+  nights     Int
+  status     String   @default("confirmed")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@map("bookings")
+}
+
+model Session {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("sessions")
+}
+
+model Review {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  listingId String   @db.ObjectId
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rating    Int
+  comment   String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("reviews")
+}
+
+model Wishlist {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  listingId String   @db.ObjectId
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([userId, listingId])
+  @@map("wishlists")
+}
