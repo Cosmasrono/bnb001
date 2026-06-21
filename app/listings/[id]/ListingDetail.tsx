@@ -19,7 +19,7 @@ type Listing = {
   price: number; images: string[]; bedrooms: number; bathrooms: number; maxGuests: number;
   amenities: string[]; category: string; rating?: number; reviewCount?: number;
   host: { id: string; name: string; createdAt: Date };
-  reviews?: Array<{ id: string; rating: number; comment: string; user: { name: string; avatar?: string } }>;
+  reviews?: Array<{ id: string; rating: number; comment: string; user: { name: string; avatar?: string | null } }>;
 };
 
 type Props = {
