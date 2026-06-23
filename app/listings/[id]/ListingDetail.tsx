@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BookingCalendar } from "@/components/BookingCalendar";
-import { differenceInCalendarDays, format, addDays } from "date-fns";
+import { format, addHours, startOfDay, isSameDay } from "date-fns";
 import { useRouter } from "next/navigation";
 
 const PLACEHOLDER_IMAGES = [
@@ -13,6 +13,22 @@ const PLACEHOLDER_IMAGES = [
   "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=800&q=80",
   "https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?w=800&q=80",
 ];
+
+// Pricing: 8 hours or more costs KSh 600; anything shorter is KSh 400.
+const FULL_DAY_HOURS = 8;
+const PRICE_FULL = 600;
+const PRICE_SHORT = 400;
+const START_HOURS = Array.from({ length: 24 }, (_, h) => h); // 0..23
+
+function priceForHours(hours: number) {
+  return hours >= FULL_DAY_HOURS ? PRICE_FULL : PRICE_SHORT;
+}
+
+function hourLabel(h: number) {
+  const meridiem = h % 24 < 12 ? "AM" : "PM";
+  const hh = h % 12 === 0 ? 12 : h % 12;
+  return `${hh}:00 ${meridiem}`;
+}
 
 type Listing = {
   id: string; title: string; description: string; location: string; city: string; country: string;
@@ -38,9 +54,9 @@ export function ListingDetail({ listing, bookedRanges, userId, userName }: Props
   const images = listing.images.length > 0 ? listing.images : PLACEHOLDER_IMAGES;
   const [activeImg, setActiveImg] = useState(0);
   const [galleryOpen, setGalleryOpen] = useState(false);
-  const [checkIn, setCheckIn] = useState<Date | null>(null);
-  const [checkOut, setCheckOut] = useState<Date | null>(null);
-  const [nightsInput, setNightsInput] = useState("");
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [startHour, setStartHour] = useState(9);
+  const [endHour, setEndHour] = useState(17);
   const [guests, setGuests] = useState(1);
   const [guestName, setGuestName] = useState(userName);
   const [guestPhone, setGuestPhone] = useState("");
@@ -48,37 +64,33 @@ export function ListingDetail({ listing, bookedRanges, userId, userName }: Props
   const [error, setError] = useState("");
   const router = useRouter();
 
-  const nights = checkIn && checkOut ? differenceInCalendarDays(checkOut, checkIn) : 0;
+  const hours = endHour > startHour ? endHour - startHour : 0;
+  const startAt = selectedDate ? addHours(startOfDay(selectedDate), startHour) : null;
+  const endAt = selectedDate ? addHours(startOfDay(selectedDate), endHour) : null;
 
-  const isDateConflict = !!(checkIn && checkOut && bookedRanges.some(
-    (r) => checkIn < r.checkOut && checkOut > r.checkIn
+  const isTimeConflict = !!(startAt && endAt && bookedRanges.some(
+    (r) => startAt < r.checkOut && endAt > r.checkIn
   ));
 
-  function handleCalendarSelect(ci: Date | null, co: Date | null) {
-    setCheckIn(ci);
-    setCheckOut(co);
-    if (ci && co) setNightsInput(String(differenceInCalendarDays(co, ci)));
+  // Other bookings already on the chosen day, so the guest can avoid taken slots.
+  const bookedToday = selectedDate
+    ? bookedRanges
+        .filter((r) => isSameDay(r.checkIn, selectedDate))
+        .sort((a, b) => a.checkIn.getTime() - b.checkIn.getTime())
+    : [];
+
+  const total = hours > 0 ? priceForHours(hours) : 0;
+
+  const canBook = !!selectedDate && hours >= 1 && !isTimeConflict;
+
+  function handleStartChange(val: number) {
+    setStartHour(val);
+    if (endHour <= val) setEndHour(Math.min(val + 1, 24));
   }
-
-  function handleNightsChange(val: string) {
-    setNightsInput(val);
-    const n = parseInt(val);
-    if (checkIn && n > 0) {
-      const newCheckOut = addDays(checkIn, n);
-      setCheckOut(newCheckOut);
-    } else if (!val) {
-      setCheckOut(null);
-    }
-  }
-
-  const subtotal = nights * listing.price;
-  const total = subtotal;
-
-  const canBook = !!checkIn && !!checkOut && nights >= 1 && !isDateConflict;
 
   async function handleSystemBook() {
     if (!userId) { router.push("/auth/login"); return; }
-    if (!canBook) return;
+    if (!canBook || !startAt || !endAt) return;
 
     setBooking(true); setError("");
     const res = await fetch("/api/bookings", {
@@ -86,11 +98,9 @@ export function ListingDetail({ listing, bookedRanges, userId, userName }: Props
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         listingId: listing.id,
-        checkIn,
-        checkOut,
+        checkIn: startAt,
+        checkOut: endAt,
         guests,
-        totalPrice: total,
-        nights,
       }),
     });
     const data = await res.json();
@@ -100,7 +110,7 @@ export function ListingDetail({ listing, bookedRanges, userId, userName }: Props
 
   function handleBook() {
     if (!userId) { router.push("/auth/login"); return; }
-    if (!canBook) return;
+    if (!canBook || !startAt || !endAt) return;
     if (!guestName.trim() || !guestPhone.trim()) {
       setError("Please enter your name and phone number so the host can reach you.");
       return;
@@ -114,9 +124,9 @@ export function ListingDetail({ listing, bookedRanges, userId, userName }: Props
       `*Phone:* ${guestPhone.trim()}`,
       ``,
       `*Room:* ${listing.title}`,
-      `*Check-in:* ${format(checkIn, "EEEE, MMM d yyyy")}`,
-      `*Check-out:* ${format(checkOut, "EEEE, MMM d yyyy")}`,
-      `*Nights:* ${nights}`,
+      `*Date:* ${format(startAt, "EEEE, MMM d yyyy")}`,
+      `*Time:* ${format(startAt, "h:mm a")} – ${format(endAt, "h:mm a")}`,
+      `*Duration:* ${hours} hour${hours !== 1 ? "s" : ""}`,
       `*Guests:* ${guests}`,
       ``,
       `*Total:* KSh ${total.toLocaleString()}`,
@@ -230,12 +240,12 @@ export function ListingDetail({ listing, bookedRanges, userId, userName }: Props
 
           {/* Calendar */}
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Select dates</h3>
-            <p className="text-gray-500 text-sm mb-4">Add your travel dates to see the exact price</p>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Select a date</h3>
+            <p className="text-gray-500 text-sm mb-4">Pick a day, then choose your hours on the right</p>
             <div className="border border-gray-200 rounded-2xl p-5">
               <BookingCalendar
-                bookedRanges={bookedRanges}
-                onSelect={handleCalendarSelect}
+                singleDay
+                onSelect={(d) => setSelectedDate(startOfDay(d))}
               />
             </div>
           </div>
@@ -275,45 +285,66 @@ export function ListingDetail({ listing, bookedRanges, userId, userName }: Props
         {/* Right: booking widget */}
         <div className="lg:col-span-1">
           <div className="sticky top-28 border border-gray-200 rounded-3xl p-6 shadow-xl">
-            <div className="flex items-baseline gap-1 mb-5">
-              <span className="text-2xl font-bold text-gray-900">KSh {listing.price.toLocaleString()}</span>
-              <span className="text-gray-500">/ night</span>
+            <div className="mb-1">
+              <span className="text-2xl font-bold text-gray-900">From KSh {PRICE_SHORT.toLocaleString()}</span>
+              <span className="text-gray-500"> / booking</span>
             </div>
+            <p className="text-xs text-gray-500 mb-5">Under 8 hrs · KSh {PRICE_SHORT.toLocaleString()} — 8 hrs or more · KSh {PRICE_FULL.toLocaleString()}</p>
 
-            {/* Date display */}
-            <div className="grid grid-cols-2 border border-gray-200 rounded-xl overflow-hidden mb-3">
-              <div className="p-3 border-r border-gray-200">
-                <p className="text-xs font-bold text-gray-700 uppercase tracking-wide">Check-in</p>
-                <p className="text-sm text-gray-900 mt-0.5">{checkIn ? format(checkIn, "MMM d, yyyy") : "Add date"}</p>
-              </div>
-              <div className="p-3">
-                <p className="text-xs font-bold text-gray-700 uppercase tracking-wide">Check-out</p>
-                <p className="text-sm text-gray-900 mt-0.5">{checkOut ? format(checkOut, "MMM d, yyyy") : "Add date"}</p>
-              </div>
-            </div>
-
-            {/* Nights input */}
+            {/* Selected date */}
             <div className="border border-gray-200 rounded-xl p-3 mb-3">
-              <p className="text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Number of nights</p>
-              <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  min={1}
-                  max={90}
-                  value={nightsInput}
-                  onChange={(e) => handleNightsChange(e.target.value)}
-                  placeholder={checkIn ? "Enter nights" : "Select check-in first"}
-                  disabled={!checkIn}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-[#FF385C] focus:ring-2 focus:ring-[#FF385C]/20 outline-none disabled:bg-gray-50 disabled:text-gray-400"
-                />
-                {nights > 0 && <span className="text-xs text-gray-500 whitespace-nowrap">{nights} night{nights !== 1 ? "s" : ""}</span>}
+              <p className="text-xs font-bold text-gray-700 uppercase tracking-wide">Date</p>
+              <p className="text-sm text-gray-900 mt-0.5">{selectedDate ? format(selectedDate, "EEEE, MMM d, yyyy") : "Select a date below"}</p>
+            </div>
+
+            {/* Time selectors */}
+            <div className="grid grid-cols-2 gap-3 mb-3">
+              <div className="border border-gray-200 rounded-xl p-3">
+                <label className="text-xs font-bold text-gray-700 uppercase tracking-wide block mb-1.5">From</label>
+                <select
+                  value={startHour}
+                  onChange={(e) => handleStartChange(Number(e.target.value))}
+                  disabled={!selectedDate}
+                  className="w-full border border-gray-200 rounded-lg px-2 py-2 text-sm text-gray-900 focus:border-[#FF385C] focus:ring-2 focus:ring-[#FF385C]/20 outline-none disabled:bg-gray-50 disabled:text-gray-400"
+                >
+                  {START_HOURS.map((h) => <option key={h} value={h}>{hourLabel(h)}</option>)}
+                </select>
+              </div>
+              <div className="border border-gray-200 rounded-xl p-3">
+                <label className="text-xs font-bold text-gray-700 uppercase tracking-wide block mb-1.5">To</label>
+                <select
+                  value={endHour}
+                  onChange={(e) => setEndHour(Number(e.target.value))}
+                  disabled={!selectedDate}
+                  className="w-full border border-gray-200 rounded-lg px-2 py-2 text-sm text-gray-900 focus:border-[#FF385C] focus:ring-2 focus:ring-[#FF385C]/20 outline-none disabled:bg-gray-50 disabled:text-gray-400"
+                >
+                  {[...START_HOURS.filter((h) => h > startHour), 24].map((h) => <option key={h} value={h}>{hourLabel(h)}</option>)}
+                </select>
               </div>
             </div>
+
+            {/* Duration + rate hint */}
+            {hours > 0 && (
+              <div className="flex items-center justify-between text-xs text-gray-500 mb-3 px-1">
+                <span>{hours} hour{hours !== 1 ? "s" : ""}</span>
+                <span>{hours >= FULL_DAY_HOURS ? "Full rate (8 hrs+)" : "Short rate (under 8 hrs)"}</span>
+              </div>
+            )}
+
+            {/* Already-booked slots for the chosen day */}
+            {bookedToday.length > 0 && (
+              <div className="bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 mb-3 text-xs text-gray-600">
+                <p className="font-semibold text-gray-700 mb-1">Already booked this day</p>
+                {bookedToday.map((r, i) => (
+                  <p key={i}>{format(r.checkIn, "h:mm a")} – {format(r.checkOut, "h:mm a")}</p>
+                ))}
+              </div>
+            )}
 
             {/* Conflict warning */}
-            {isDateConflict && (
+            {isTimeConflict && (
               <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-700 mb-3">
-                These dates overlap an existing booking. Please choose different dates.
+                This time overlaps an existing booking. Please choose a different time.
               </div>
             )}
 
@@ -363,7 +394,7 @@ export function ListingDetail({ listing, bookedRanges, userId, userName }: Props
             {/* Book in system */}
             <button onClick={handleSystemBook} disabled={!canBook || booking}
               className="w-full bg-[#FF385C] hover:bg-[#E31C5F] text-white font-bold py-4 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg hover:shadow-rose-200">
-              {booking ? "Booking…" : canBook ? "Book now" : "Select dates to book"}
+              {booking ? "Booking…" : canBook ? "Book now" : "Select date & time"}
             </button>
 
             {/* Divider */}
@@ -383,11 +414,11 @@ export function ListingDetail({ listing, bookedRanges, userId, userName }: Props
             <p className="text-center text-xs text-gray-400 mt-2">Chat with the host on +254 725 830546</p>
 
             {/* Price breakdown */}
-            {nights > 0 && (
+            {hours > 0 && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-4 space-y-2 border-t border-gray-100 pt-4">
                 <div className="flex justify-between text-sm text-gray-600">
-                  <span>KSh {listing.price.toLocaleString()} × {nights} night{nights !== 1 ? "s" : ""}</span>
-                  <span>KSh {subtotal.toLocaleString()}</span>
+                  <span>{hours} hour{hours !== 1 ? "s" : ""} · {hours >= FULL_DAY_HOURS ? "8 hrs+ rate" : "under 8 hrs rate"}</span>
+                  <span>KSh {total.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-sm font-bold text-gray-900 border-t border-gray-100 pt-2 mt-2">
                   <span>Total</span>

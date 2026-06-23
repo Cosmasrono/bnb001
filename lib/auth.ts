@@ -1,5 +1,33 @@
 import { cookies } from "next/headers";
+import { randomBytes } from "crypto";
 import prisma from "./prisma";
+
+const VERIFICATION_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+export function generateVerificationToken() {
+  return randomBytes(32).toString("hex");
+}
+
+export function verificationExpiry() {
+  return new Date(Date.now() + VERIFICATION_TTL_MS);
+}
+
+export type VerifyResult = "success" | "expired" | "invalid";
+
+export async function verifyEmailToken(token?: string): Promise<VerifyResult> {
+  if (!token) return "invalid";
+
+  const user = await prisma.user.findFirst({ where: { verificationToken: token } });
+  if (!user) return "invalid"; // unknown or already-consumed token
+
+  if (user.verificationExpires && user.verificationExpires < new Date()) return "expired";
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { emailVerified: true, verificationToken: null, verificationExpires: null },
+  });
+  return "success";
+}
 
 export async function getSessionUser() {
   const store = await cookies();

@@ -8,10 +8,13 @@ import { motion } from "framer-motion";
 export default function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [isHost, setIsHost] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [resent, setResent] = useState(false);
   const router = useRouter();
 
   async function handleSubmit(e: React.FormEvent) {
@@ -20,12 +23,22 @@ export default function RegisterPage() {
     const res = await fetch("/api/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password, isHost }),
+      body: JSON.stringify({ name, email, phone, password, isHost }),
     });
     const data = await res.json();
     if (!res.ok) { setError(data.error || "Registration failed"); setLoading(false); return; }
-    router.push("/listings");
-    router.refresh();
+    setSubmitted(true);
+    setLoading(false);
+  }
+
+  async function handleResend() {
+    setResent(false);
+    await fetch("/api/auth/resend", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+    setResent(true);
   }
 
   const inp = "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:border-[#FF385C] focus:ring-2 focus:ring-[#FF385C]/20 outline-none transition-all";
@@ -48,6 +61,27 @@ export default function RegisterPage() {
           transition={{ duration: 0.4 }}
           className="w-full max-w-md"
         >
+          {submitted ? (
+            <div className="text-center">
+              <div className="w-16 h-16 rounded-full bg-rose-50 text-[#FF385C] flex items-center justify-center text-3xl mx-auto mb-6">✉️</div>
+              <h1 className="text-2xl font-bold text-gray-900 mb-2">Check your email</h1>
+              <p className="text-gray-500 leading-relaxed mb-6">
+                We sent a verification link to <span className="font-semibold text-gray-900">{email}</span>.
+                Click it to activate your account, then log in.
+              </p>
+              <button onClick={handleResend} type="button"
+                className="text-sm text-[#FF385C] font-semibold hover:underline">
+                Didn&apos;t get it? Resend email
+              </button>
+              {resent && <p className="text-xs text-green-600 mt-2">Verification email sent again.</p>}
+              <div className="mt-8">
+                <Link href="/auth/login" className="inline-flex w-full justify-center bg-[#FF385C] hover:bg-[#E31C5F] text-white font-bold py-3.5 rounded-xl transition-all">
+                  Go to log in
+                </Link>
+              </div>
+            </div>
+          ) : (
+          <>
           <div className="mb-8">
             <Link href="/" className="flex items-center gap-2 text-[#FF385C] mb-8">
               <svg viewBox="0 0 32 32" width="28" height="28" fill="currentColor"><path d="M16 1C8.268 1 2 7.268 2 15c0 4.792 2.4 9.04 6.08 11.648L16 31l7.92-4.352C27.6 24.04 30 19.792 30 15 30 7.268 23.732 1 16 1zm0 20a6 6 0 1 1 0-12 6 6 0 0 1 0 12z"/></svg>
@@ -65,6 +99,10 @@ export default function RegisterPage() {
             <div>
               <label className="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">Email</label>
               <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" required className={inp} />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">Phone number</label>
+              <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="e.g. 0712 345678" required className={inp} />
             </div>
             <div>
               <label className="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">Password</label>
@@ -101,6 +139,8 @@ export default function RegisterPage() {
             Already have an account?{" "}
             <Link href="/auth/login" className="text-[#FF385C] font-semibold hover:underline">Log in</Link>
           </div>
+          </>
+          )}
         </motion.div>
       </div>
     </div>

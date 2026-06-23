@@ -11,9 +11,13 @@ model User {
   id        String    @id @default(auto()) @map("_id") @db.ObjectId
   name      String
   email     String    @unique
+  phone     String?
   password  String
   avatar    String?
   isHost    Boolean   @default(false)
+  emailVerified       Boolean   @default(false)
+  verificationToken   String?
+  verificationExpires DateTime?
   createdAt DateTime  @default(now()) @map("created_at")
   listings  Listing[]
   bookings  Booking[]
@@ -58,7 +62,8 @@ model Booking {
   checkOut   DateTime
   guests     Int
   totalPrice Float
-  nights     Int
+  hours      Int?
+  nights     Int?
   status     String   @default("confirmed")
   createdAt  DateTime @default(now()) @map("created_at")
 

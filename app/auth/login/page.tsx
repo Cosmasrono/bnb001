@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 
@@ -10,20 +10,44 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [verified, setVerified] = useState(false);
+  const [needsVerification, setNeedsVerification] = useState(false);
+  const [resent, setResent] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("verified") === "1") {
+      setVerified(true);
+    }
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true); setError("");
+    setLoading(true); setError(""); setNeedsVerification(false); setVerified(false);
     const res = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
     });
     const data = await res.json();
-    if (!res.ok) { setError(data.error || "Login failed"); setLoading(false); return; }
+    if (!res.ok) {
+      setError(data.error || "Login failed");
+      setNeedsVerification(!!data.needsVerification);
+      setLoading(false);
+      return;
+    }
     router.push("/listings");
     router.refresh();
+  }
+
+  async function handleResend() {
+    setResent(false);
+    await fetch("/api/auth/resend", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+    setResent(true);
   }
 
   const inp = "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:border-[#FF385C] focus:ring-2 focus:ring-[#FF385C]/20 outline-none transition-all";
@@ -58,6 +82,12 @@ export default function LoginPage() {
             <p className="text-gray-500 mt-1.5">Enter your email and password below</p>
           </div>
 
+          {verified && (
+            <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-sm text-green-700 mb-4">
+              Email verified! You can now log in.
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">Email</label>
@@ -71,6 +101,14 @@ export default function LoginPage() {
             {error && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700">
                 {error}
+                {needsVerification && (
+                  <div className="mt-2">
+                    <button type="button" onClick={handleResend} className="font-semibold text-[#FF385C] hover:underline">
+                      Resend verification email
+                    </button>
+                    {resent && <span className="ml-2 text-green-600">Sent!</span>}
+                  </div>
+                )}
               </motion.div>
             )}
 

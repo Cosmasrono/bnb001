@@ -6,7 +6,7 @@ import Image from "next/image";
 import { getSessionUser } from "@/lib/auth";
 import { Navbar } from "@/components/Navbar";
 import prisma from "@/lib/prisma";
-import { format, differenceInCalendarDays } from "date-fns";
+import { format } from "date-fns";
 
 const PLACEHOLDER = "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&q=80";
 
@@ -24,7 +24,7 @@ export default async function BookingsPage() {
   const past = bookings.filter((b) => new Date(b.checkOut) < new Date());
 
   function BookingCard({ b, isPast }: { b: typeof bookings[0]; isPast: boolean }) {
-    const nights = differenceInCalendarDays(new Date(b.checkOut), new Date(b.checkIn));
+    const hours = Math.max(1, Math.round((new Date(b.checkOut).getTime() - new Date(b.checkIn).getTime()) / 3_600_000));
     const img = b.listing.images[0] || PLACEHOLDER;
     return (
       <div className={`flex gap-4 p-4 rounded-2xl border transition-all ${isPast ? "border-gray-100 bg-gray-50 opacity-75" : "border-gray-200 bg-white shadow-sm hover:shadow-md"}`}>
@@ -43,7 +43,7 @@ export default async function BookingsPage() {
           </div>
           <p className="text-xs text-gray-500 mt-0.5">{b.listing.city}, {b.listing.country}</p>
           <p className="text-xs text-gray-600 mt-2">
-            {format(new Date(b.checkIn), "MMM d")} – {format(new Date(b.checkOut), "MMM d, yyyy")} · {nights} night{nights !== 1 ? "s" : ""} · {b.guests} guest{b.guests !== 1 ? "s" : ""}
+            {format(new Date(b.checkIn), "MMM d, yyyy")} · {format(new Date(b.checkIn), "h:mm a")} – {format(new Date(b.checkOut), "h:mm a")} · {hours} hr{hours !== 1 ? "s" : ""} · {b.guests} guest{b.guests !== 1 ? "s" : ""}
           </p>
           <p className="text-sm font-bold text-gray-900 mt-1">KSh {b.totalPrice.toLocaleString()}</p>
         </div>

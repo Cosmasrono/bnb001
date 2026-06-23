@@ -128,7 +128,7 @@ export default async function HostPage() {
                       <span className="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded-full font-semibold flex-shrink-0">{b.status}</span>
                     </div>
                     <p className="text-xs text-gray-600 mt-1.5">
-                      {format(new Date(b.checkIn), "MMM d")} – {format(new Date(b.checkOut), "MMM d")} · {b.guests} guest{b.guests !== 1 ? "s" : ""}
+                      {format(new Date(b.checkIn), "MMM d")} · {format(new Date(b.checkIn), "h:mm a")} – {format(new Date(b.checkOut), "h:mm a")} · {b.guests} guest{b.guests !== 1 ? "s" : ""}
                     </p>
                     <div className="flex items-center justify-between mt-2">
                       <p className="text-xs text-gray-500">{b.user.name}</p>

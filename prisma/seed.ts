@@ -8,12 +8,13 @@ async function main() {
 
   const host = await prisma.user.upsert({
     where: { email: "admin@isavoestates.com" },
-    update: {},
+    update: { emailVerified: true },
     create: {
       name: "Isavo Estates",
       email: "admin@isavoestates.com",
       password: hostPassword,
       isHost: true,
+      emailVerified: true,
     },
   });
 

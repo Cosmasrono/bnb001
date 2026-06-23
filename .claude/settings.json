@@ -4,7 +4,14 @@
       "PowerShell(npx tsc --noEmit 2>&1)",
       "PowerShell(npx prisma generate 2>&1)",
       "PowerShell(npx tsx prisma/set-bedsitter.ts 2>&1)",
-      "PowerShell(pnpm run build)"
+      "PowerShell(pnpm run build)",
+      "PowerShell(npx prisma generate)",
+      "PowerShell(pnpm add nodemailer)",
+      "PowerShell(pnpm add -D @types/nodemailer)",
+      "Bash(git check-ignore *)",
+      "Bash(cat)",
+      "Bash(node /tmp/smtp_test.mjs)",
+      "Bash(node ./_smtp_test.mjs)"
     ]
   }
 }

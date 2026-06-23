@@ -10,9 +10,10 @@ import {
 type Props = {
   bookedRanges?: { checkIn: Date; checkOut: Date }[];
   onSelect: (checkIn: Date, checkOut: Date) => void;
+  singleDay?: boolean;
 };
 
-export function BookingCalendar({ bookedRanges = [], onSelect }: Props) {
+export function BookingCalendar({ bookedRanges = [], onSelect, singleDay = false }: Props) {
   const today = startOfDay(new Date());
   const [month, setMonth] = useState(today);
   const [direction, setDirection] = useState(1);
@@ -36,6 +37,11 @@ export function BookingCalendar({ bookedRanges = [], onSelect }: Props) {
 
   function handleDay(d: Date) {
     if (isBefore(d, today) || isBooked(d)) return;
+    if (singleDay) {
+      setStart(d); setEnd(null);
+      onSelect(d, d);
+      return;
+    }
     if (!start || (start && end)) {
       setStart(d); setEnd(null);
     } else {
