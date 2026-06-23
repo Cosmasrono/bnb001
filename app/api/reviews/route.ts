@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
 
   // Update listing rating
   const reviews = await prisma.review.findMany({ where: { listingId } });
-  const avgRating = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
+  const avgRating = reviews.reduce((sum: number, r) => sum + r.rating, 0) / reviews.length;
 
   await prisma.listing.update({
     where: { id: listingId },
