@@ -9,7 +9,7 @@ import { Navbar } from "@/components/Navbar";
 import prisma from "@/lib/prisma";
 import { format } from "date-fns";
 
-const PLACEHOLDER = "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&q=80";
+const PLACEHOLDER = "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=400&q=80";
 
 export default async function HostPage() {
   const user = await getSessionUser();

@@ -41,13 +41,35 @@ export function Navbar({ user }: { user: User }) {
           <svg viewBox="0 0 32 32" width="32" height="32" fill="#FF385C">
             <path d="M16 1C8.268 1 2 7.268 2 15c0 4.792 2.4 9.04 6.08 11.648L16 31l7.92-4.352C27.6 24.04 30 19.792 30 15 30 7.268 23.732 1 16 1zm0 20a6 6 0 1 1 0-12 6 6 0 0 1 0 12z"/>
           </svg>
-          <span className="font-bold text-xl text-[#FF385C] hidden sm:block">Isavo Guest</span>
+          <span className="font-bold text-xl text-[#FF385C] hidden sm:block">Tsavo Estates</span>
         </Link>
+
+        {/* Primary navigation (desktop) */}
+        <nav className="hidden md:flex items-center gap-1">
+          {[
+            { href: "/", label: "Home", active: pathname === "/" },
+            { href: "/listings", label: "Explore stays", active: pathname.startsWith("/listings") },
+            ...(user ? [{ href: "/bookings", label: "My bookings", active: pathname.startsWith("/bookings") }] : []),
+          ].map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-current={item.active ? "page" : undefined}
+              className={`text-sm px-3 py-2 rounded-full transition-colors ${
+                item.active
+                  ? "font-semibold text-[#FF385C] bg-[#FF385C]/10"
+                  : "font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+              }`}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </nav>
 
         {/* Search pill (desktop) */}
         <Link
           href="/listings"
-          className="hidden md:flex items-center gap-3 border border-gray-200 rounded-full px-4 py-2 shadow-sm hover:shadow-md transition-shadow cursor-pointer group"
+          className="hidden lg:flex items-center gap-3 border border-gray-200 rounded-full px-4 py-2 shadow-sm hover:shadow-md transition-shadow cursor-pointer group"
         >
           <span className="text-sm font-medium text-gray-700 group-hover:text-[#FF385C] transition-colors">Anywhere</span>
           <span className="w-px h-4 bg-gray-200" />
@@ -63,6 +85,14 @@ export function Navbar({ user }: { user: User }) {
 
         {/* Right controls */}
         <div className="flex items-center gap-2">
+          {!user && (
+            <Link
+              href="/auth/login"
+              className="text-sm font-semibold text-white bg-[#FF385C] hover:bg-[#E31C5F] px-4 py-2 rounded-full transition-colors flex-shrink-0"
+            >
+              Log in
+            </Link>
+          )}
           {user && isHostUser(user) && (
             <Link href="/host" className="hidden sm:block text-sm font-medium text-gray-700 hover:text-[#FF385C] transition-colors px-3 py-2 rounded-full hover:bg-gray-50">
               Switch to hosting
@@ -101,6 +131,10 @@ export function Navbar({ user }: { user: User }) {
                           <p className="text-sm font-semibold text-gray-900">{user.name}</p>
                           <p className="text-xs text-gray-500">{user.email}</p>
                         </div>
+                        <Link href="/listings" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors md:hidden">
+                          <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817-1.414 1.414-4.816-4.816A6 6 0 012 8z"/></svg>
+                          Explore stays
+                        </Link>
                         <Link href="/bookings" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                           My bookings
@@ -126,6 +160,14 @@ export function Navbar({ user }: { user: User }) {
                         <Link href="/auth/register" onClick={() => setMenuOpen(false)} className="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
                           Sign up
                         </Link>
+                        <div className="border-t border-gray-100 mt-1 pt-1">
+                          <Link href="/listings" onClick={() => setMenuOpen(false)} className="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                            Explore stays
+                          </Link>
+                          <Link href="/host/new" onClick={() => setMenuOpen(false)} className="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                            Become a host
+                          </Link>
+                        </div>
                       </>
                     )}
                   </motion.div>

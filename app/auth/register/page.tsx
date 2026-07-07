@@ -50,7 +50,7 @@ export default function RegisterPage() {
         <div className="absolute inset-0 bg-gradient-to-br from-[#FF385C]/70 to-black/30" />
         <div className="absolute bottom-16 left-12 text-white">
           <h2 className="text-4xl font-bold mb-2">Start your journey</h2>
-          <p className="text-white/80 max-w-xs">Discover and book beautiful rooms at Isavo Estates.</p>
+          <p className="text-white/80 max-w-xs">Discover and book beautiful rooms at Tsavo Estates.</p>
         </div>
       </div>
 
@@ -85,7 +85,7 @@ export default function RegisterPage() {
           <div className="mb-8">
             <Link href="/" className="flex items-center gap-2 text-[#FF385C] mb-8">
               <svg viewBox="0 0 32 32" width="28" height="28" fill="currentColor"><path d="M16 1C8.268 1 2 7.268 2 15c0 4.792 2.4 9.04 6.08 11.648L16 31l7.92-4.352C27.6 24.04 30 19.792 30 15 30 7.268 23.732 1 16 1zm0 20a6 6 0 1 1 0-12 6 6 0 0 1 0 12z"/></svg>
-              <span className="font-bold text-xl">Isavo Estates</span>
+              <span className="font-bold text-xl">Tsavo Estates</span>
             </Link>
             <h1 className="text-2xl font-bold text-gray-900">Create your account</h1>
             <p className="text-gray-500 mt-1.5">It only takes a minute</p>

@@ -29,16 +29,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "End time must be after start time" }, { status: 400 });
   }
 
-  // Same-day only. Subtract 1ms from the end so a booking ending at midnight still
-  // counts as the same calendar day it started on.
-  const endDayMarker = new Date(checkOutDate.getTime() - 1);
-  if (checkInDate.toDateString() !== endDayMarker.toDateString()) {
-    return NextResponse.json({ error: "A booking must start and end on the same day" }, { status: 400 });
-  }
-
   const hours = Math.round((checkOutDate.getTime() - checkInDate.getTime()) / 3_600_000);
   if (hours < 1) {
     return NextResponse.json({ error: "Minimum booking is 1 hour" }, { status: 400 });
+  }
+  // Overnight stays are allowed; 24 hours matches the longest duration offered in the UI.
+  if (hours > 24) {
+    return NextResponse.json({ error: "Maximum booking is 24 hours" }, { status: 400 });
   }
 
   // System auto-calculates the price; never trust a client-supplied total.

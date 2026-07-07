@@ -3,8 +3,8 @@ import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "StayEasy — Find your perfect stay",
-  description: "Book unique homes, apartments and experiences around the world.",
+  title: "Tsavo Estates — Find your perfect stay",
+  description: "Search unique homes and apartments, book instantly, and manage all your trips in one place — or list your own property and start hosting.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -20,12 +20,12 @@ type Listing = {
 };
 
 const PLACEHOLDER_IMAGES = [
-  "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&q=80",
-  "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=800&q=80",
-  "https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?w=800&q=80",
-  "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800&q=80",
-  "https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=800&q=80",
-  "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&q=80",
+  "https://images.unsplash.com/photo-1523805009345-7448845a9e53?w=800&q=80",
+  "https://images.unsplash.com/photo-1516426122078-c23e76319801?w=800&q=80",
+  "https://images.unsplash.com/photo-1489392191049-fc10c97e64b6?w=800&q=80",
+  "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800&q=80",
+  "https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=800&q=80",
+  "https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?w=800&q=80",
 ];
 
 export function ListingCard({ listing, index = 0 }: { listing: Listing; index?: number }) {

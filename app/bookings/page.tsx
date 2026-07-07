@@ -8,7 +8,7 @@ import { Navbar } from "@/components/Navbar";
 import prisma from "@/lib/prisma";
 import { format } from "date-fns";
 
-const PLACEHOLDER = "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&q=80";
+const PLACEHOLDER = "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=400&q=80";
 
 export default async function BookingsPage() {
   const user = await getSessionUser();
@@ -56,7 +56,10 @@ export default async function BookingsPage() {
       <Navbar user={{ id: user.id, name: user.name, email: user.email, isHost: user.isHost }} />
 
       <main className="flex-1 max-w-3xl mx-auto px-4 sm:px-6 py-10 w-full">
-        <h1 className="text-2xl font-bold text-gray-900 mb-8">My bookings</h1>
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-gray-900">My bookings</h1>
+          <p className="text-gray-500 text-sm mt-0.5">All your trips in one place — upcoming stays first, past stays below.</p>
+        </div>
 
         {bookings.length === 0 ? (
           <div className="text-center py-24">
@@ -71,7 +74,7 @@ export default async function BookingsPage() {
           <div className="space-y-8">
             {upcoming.length > 0 && (
               <div>
-                <h2 className="text-base font-semibold text-gray-700 mb-3 uppercase tracking-wide text-xs">Upcoming ({upcoming.length})</h2>
+                <h2 className="font-semibold text-gray-700 mb-3 uppercase tracking-wide text-xs">Upcoming ({upcoming.length})</h2>
                 <div className="space-y-3">
                   {upcoming.map((b) => <BookingCard key={b.id} b={b} isPast={false} />)}
                 </div>
@@ -79,7 +82,7 @@ export default async function BookingsPage() {
             )}
             {past.length > 0 && (
               <div>
-                <h2 className="text-base font-semibold text-gray-400 mb-3 uppercase tracking-wide text-xs">Past ({past.length})</h2>
+                <h2 className="font-semibold text-gray-400 mb-3 uppercase tracking-wide text-xs">Past ({past.length})</h2>
                 <div className="space-y-3">
                   {past.map((b) => <BookingCard key={b.id} b={b} isPast={true} />)}
                 </div>

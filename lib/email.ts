@@ -14,17 +14,17 @@ function getTransport() {
 }
 
 export async function sendVerificationEmail(to: string, name: string, verifyUrl: string) {
-  const subject = "Verify your email — Isavo Estates";
+  const subject = "Verify your email — Tsavo Estates";
   const text =
     `Hi ${name},\n\n` +
-    `Welcome to Isavo Estates! Please verify your email address to activate your account:\n` +
+    `Welcome to Tsavo Estates! Please verify your email address to activate your account:\n` +
     `${verifyUrl}\n\n` +
     `This link expires in 24 hours.\n\n` +
     `If you didn't create an account, you can safely ignore this email.`;
 
   const html = `
     <div style="font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;max-width:480px;margin:0 auto;padding:24px;color:#111">
-      <h1 style="color:#FF385C;font-size:20px;margin:0 0 16px">Isavo Estates</h1>
+      <h1 style="color:#FF385C;font-size:20px;margin:0 0 16px">Tsavo Estates</h1>
       <p style="font-size:15px;line-height:1.5">Hi ${name},</p>
       <p style="font-size:15px;line-height:1.5">Welcome aboard! Please confirm your email address to activate your account.</p>
       <p style="margin:24px 0">
@@ -47,7 +47,7 @@ export async function sendVerificationEmail(to: string, name: string, verifyUrl:
   }
 
   await transport.sendMail({
-    from: SMTP_FROM || `Isavo Estates <${SMTP_USER}>`,
+    from: SMTP_FROM || `Tsavo Estates <${SMTP_USER}>`,
     to,
     subject,
     text,
